@@ -1,0 +1,18 @@
+﻿# Dependencies and build output
+**/node_modules/
+**/dist/
+**/bin/
+**/obj/
+
+# IDE files
+**/.vs/
+**/.idea/
+*.suo
+*.user
+
+# Archives
+*.rar
+
+# Local environment
+.env
+*.local
