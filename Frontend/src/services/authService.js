@@ -13,13 +13,13 @@ export async function login({ email, password }) {
 export async function registerBuyer(buyerData) {
   // Mapping frontend 'name' to backend 'fullName'
   const payload = {
-    FullName: buyerData.fullName,
-    Email: buyerData.email,
-    Password: buyerData.password,
-    Country: buyerData.country,
-    City: buyerData.city,
-    Address: buyerData.address,
-    PhoneNumber: buyerData.phoneNumber
+    fullName: buyerData.fullName,
+    email: buyerData.email,
+    password: buyerData.password,
+    country: buyerData.country,
+    city: buyerData.city,
+    address: buyerData.address,
+    phoneNumber: buyerData.phoneNumber
   };
 
   const userData = await authApi.registerBuyer(payload);
@@ -30,12 +30,12 @@ export async function registerBuyer(buyerData) {
 export async function registerArtist(artistData) {
   // Mapping frontend 'name' to backend 'fullName'
   const payload = {
-    FullName: artistData.fullName,
-    Email: artistData.email,
-    Password: artistData.password,
-    Country: artistData.country,
-    City: artistData.city,
-    PhoneNumber: artistData.phoneNumber
+    fullName: artistData.fullName,
+    email: artistData.email,
+    password: artistData.password,
+    country: artistData.country,
+    city: artistData.city,
+    phoneNumber: artistData.phoneNumber
   };
 
   const userData = await authApi.registerArtist(payload);
@@ -44,7 +44,7 @@ export async function registerArtist(artistData) {
 
 export async function logout() {
   // Clears cookies and local state
-  authApi.logout();
+  await authApi.logout();
 }
 
 export async function refreshSession() {

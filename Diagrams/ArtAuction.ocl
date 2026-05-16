@@ -1,0 +1,138 @@
+-- ============================================================
+-- Art Auction OCL Constraints
+-- Source diagram: class diagram.pdf
+-- Note:
+-- 1) Names are kept as in your diagram (e.g., Artwork_Post, post_sold).
+-- 2) Since the diagram uses FK-style attributes (ids), constraints
+--    are written with allInstances() + id matching.
+-- ============================================================
+
+package ArtAuction
+
+-- -----------------------------
+-- User and Role Constraints
+-- -----------------------------
+context User
+inv UserIdPositive:
+  self.id > 0
+
+inv UserNameNotEmpty:
+  self.name <> ''
+
+inv UserEmailNotEmpty:
+  self.email <> ''
+
+inv UserEmailUnique:
+  User.allInstances()->isUnique(u | u.email)
+
+inv UserPasswordNotEmpty:
+  self.password <> ''
+
+inv BuyerPhoneNotEmpty:
+  self.phone_number <> ''
+
+=> users nullable false data
+
+-- -----------------------------
+-- Category / Tag Constraints
+-- -----------------------------
+context category
+inv CategoryIdPositive:
+  self.id > 0
+
+inv CategoryNameNotEmpty:
+  self.name <> ''
+
+inv CategoryNameUnique:
+  category.allInstances()->isUnique(c | c.name)
+
+context Tag
+inv TagIdPositive:
+  self.id > 0
+
+inv TagNameNotEmpty:
+  self.name <> ''
+
+inv TagNameUnique:
+  Tag.allInstances()->isUnique(t | t.name)
+
+
+-- -----------------------------
+-- Artwork_Post Constraints
+-- -----------------------------
+context Artwork_Post
+inv PostIdPositive:
+  self.id > 0
+
+inv PostTitleNotEmpty:
+  self.title <> ''
+
+inv PostInitialPricePositive:
+  self.initial_price > 0
+
+inv PostBuyNowPriceValid:
+  self.buy_now_price >= self.initial_price
+
+inv PostStartBeforeEnd:
+  self.start_date < self.end_date
+
+
+-- -----------------------------
+-- post_tag (many-to-many bridge)
+-- -----------------------------
+inv PostTagUniquePair:
+  post_tag.allInstances()
+    ->select(pt | pt.post_id = self.post_id and pt.tag_id = self.tag_id)->size() = 1
+
+
+-- -----------------------------
+-- watch_list Constraints
+-- -----------------------------
+
+inv WatchListUniqueBuyerPostPair:
+  watch_list.allInstances()
+    ->select(w | w.buyer_id = self.buyer_id and w.post_id = self.post_id)->size() = 1
+
+
+-- -----------------------------
+-- Bid Constraints
+-- -----------------------------
+inv BidPricePositive:
+  self.buyer_price > 0
+
+inv BidAtLeastInitialPrice:
+  let post : Artwork_Post = Artwork_Post.allInstances()->any(p | p.id = self.post_id) in
+  self.buyer_price >= post.initial_price
+
+-- Composite key style in your model: one Bid row per (buyer_id, post_id)
+inv BidUniqueBuyerPostPair:
+  Bid.allInstances()
+    ->select(b | b.buyer_id = self.buyer_id and b.post_id = self.post_id)->size() = 1
+
+
+-- -----------------------------
+-- post_sold Constraints
+-- -----------------------------
+inv SoldFinalPricePositive:
+  self.final_price > 0
+
+-- In model semantics: one sold record per post (0..1 sold-as from post)
+inv SoldAtMostOnePerPost:
+  post_sold.allInstances()->select(ps | ps.post_id = self.post_id)->size() <= 1
+
+-- If paid flag is true, record must remain valid and priced.
+inv PaidImpliesValidPrice:
+  self.is_paid implies self.final_price > 0
+
+-- Winner integrity: sold buyer must have a bid on that post.
+inv SoldBuyerMustHaveBidOnPost:
+  Bid.allInstances()->exists(b | b.buyer_id = self.buyer_id and b.post_id = self.post_id)
+
+-- Final price should be >= winning buyer bid value
+inv SoldPriceNotBelowBuyerBid:
+  let winningBid : Bid = Bid.allInstances()->any(b |
+    b.buyer_id = self.buyer_id and b.post_id = self.post_id
+  ) in
+  self.final_price >= winningBid.buyer_price
+
+endpackage

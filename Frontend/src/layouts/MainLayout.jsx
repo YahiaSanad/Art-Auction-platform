@@ -2,7 +2,6 @@ import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { APP_ROUTES } from '../constants/routes'
 import { routeForRole } from '../utils/navigation'
-import { WinnerNotificationPopup } from '../components/buyer/WinnerNotificationPopup'
 
 const navLinks = [
   { to: APP_ROUTES.HOME, label: 'Home' },
@@ -80,7 +79,6 @@ export function MainLayout() {
       <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
         <Outlet />
       </main>
-      <WinnerNotificationPopup />
     </div>
   )
 }

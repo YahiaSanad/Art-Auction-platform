@@ -16,6 +16,7 @@ export function BidHistoryTable({ bids }) {
           <tr>
             <th className="px-4 py-3">Bidder</th>
             <th className="px-4 py-3">Price</th>
+            <th className="px-4 py-3">Bid Date</th>
           </tr>
         </thead>
         <tbody>
@@ -23,6 +24,11 @@ export function BidHistoryTable({ bids }) {
             <tr key={bid.id ?? `${bid.buyerName}-${index}`} className="border-t border-stone-200">
               <td className="px-4 py-3 font-semibold text-stone-800">{bid.buyerName}</td>
               <td className="px-4 py-3 text-stone-700">{formatCurrency(bid.buyerPrice)}</td>
+              <td className="px-4 py-3 text-stone-700">{Intl.DateTimeFormat('en-US', {day: '2-digit',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true}).format(new Date(bid.bidTime))}</td>
             </tr>
           ))}
         </tbody>

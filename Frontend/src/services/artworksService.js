@@ -9,13 +9,28 @@ function toDataUrl(rawImage) {
   return `data:image/jpeg;base64,${rawImage}`
 }
 
+function toFiniteNumber(value, fallback = 0) {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
 function normalizeArtwork(artwork) {
   const normalizedImage = toDataUrl(artwork.image || artwork.imageUrl)
+  const initialPrice = toFiniteNumber(artwork.initialPrice, 0)
+  const buyNowPrice = toFiniteNumber(
+    artwork.buyNowPrice ?? artwork.buyNewPrice ?? initialPrice,
+    initialPrice,
+  )
 
   return {
     ...artwork,
+    initialPrice,
+    buyNowPrice,
+    // Keep backward compatibility with legacy frontend fields.
+    buyNewPrice: buyNowPrice,
     image: normalizedImage,
     imageUrl: normalizedImage,
+    tags: Array.isArray(artwork.tags) ? artwork.tags : [],
     auctionStartTime: artwork.auctionStartTime || artwork.startDate,
     auctionEndTime: artwork.auctionEndTime || artwork.endDate,
   }
@@ -42,7 +57,14 @@ export async function listOngoingBidFeed() {
 
   const artworkPostsWithBids = ongoingPosts
     .map(async (artwork) => {
-      const postBids = await postBidApis.getAllPostBids(artwork.id);
+      let postBids = []
+      try {
+        // Some backend versions don't expose /PostBid routes yet.
+        // Keep Home page usable by falling back to an empty bid feed.
+        postBids = await postBidApis.getAllPostBids(artwork.id);
+      } catch (error) {
+        postBids = []
+      }
 
       return {
         ...artwork,

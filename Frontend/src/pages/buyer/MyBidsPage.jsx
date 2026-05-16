@@ -49,7 +49,11 @@ export function MyBidsPage() {
                   <td className="px-4 py-3 font-semibold text-stone-800">{bid.artworkTitle}</td>
                   <td className="px-4 py-3 text-stone-700">{formatCurrency(bid.price)}</td>
                   <td className="px-4 py-3 text-stone-600">
-                    {bid.timestamp ? formatDateTime(bid.timestamp) : '-'}
+                    {Intl.DateTimeFormat('en-US', {day: '2-digit',
+                      month: 'short',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true}).format(new Date(bid.bidTime))}
                   </td>
                 </tr>
               ))}

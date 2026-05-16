@@ -1,10 +1,10 @@
 import axios from 'axios'
 import { useAuthStore } from '../store/authStore'
-import { refreshToken, logout } from './AuthenticationApis';
+import { refreshToken } from './AuthenticationApis';
 import Cookies from 'js-cookie';
 
 const apiClient = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5265',
+    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000',
     headers: {
         'Content-Type': 'application/json',
     },
@@ -31,25 +31,34 @@ apiClient.interceptors.response.use(
     (response) => response, // Standard 2xx response
     async (error) => {
         const originalRequest = error.config;
+        const requestUrl = String(originalRequest?.url || '')
+        const isAuthRoute = requestUrl.startsWith('/Authentication/')
+        const isRefreshCall = requestUrl.includes('/Authentication/RefreshToken')
+        const hasRefreshToken = Boolean(Cookies.get('refresh_token'))
 
-        // If error is 401 and we haven't tried refreshing yet
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        // Only try silent refresh for non-auth routes when a refresh token exists.
+        if (
+            error.response?.status === 401 &&
+            !originalRequest?._retry &&
+            !isAuthRoute &&
+            !isRefreshCall &&
+            hasRefreshToken
+        ) {
             originalRequest._retry = true; // Mark to prevent infinite loops
 
             try {
-                // Call the function you just showed me
                 const userData = await refreshToken();
+                console.log(userData);
                 
                 // Update your Zustand store with new data/token
                 useAuthStore.getState().setSession({ user: userData });
-                Cookies.set("jwt_token",userData.token)
 
                 // Update the header and retry the original request
+                originalRequest.headers = originalRequest.headers || {}
                 originalRequest.headers.Authorization = `Bearer ${userData.token}`;
                 return apiClient(originalRequest);
             } catch (refreshError) {
                 // If refreshing fails, the user must log in again
-                logout();
                 useAuthStore.getState().logout();
                 return Promise.reject(refreshError);
             }

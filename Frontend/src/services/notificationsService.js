@@ -34,6 +34,17 @@ function buildPendingKey(buyerId, postSold, index) {
   return `pending-${buyerId}-${safeTitle}-${safePrice}-${index}`
 }
 
+function isPaidFlag(postSold) {
+  // Backend may return either `paid` or `isPaid` depending on DTO getter naming.
+  if (typeof postSold?.paid === 'boolean') return postSold.paid
+  if (typeof postSold?.isPaid === 'boolean') return postSold.isPaid
+  return false
+}
+
+function getArtworkPostId(postSold) {
+  return Number(postSold?.artworkPostId ?? postSold?.ArtworkPostId)
+}
+
 function toDataUrl(rawImage) {
   if (!rawImage) return ''
   if (String(rawImage).startsWith('data:')) return rawImage
@@ -45,25 +56,26 @@ export async function listNotifications(userId) {
   let postSolds = []
 
   try {
-    postSolds = await postSoldApis.getPostSoldForBuyer(buyerId)
+    postSolds = await postSoldApis.getUnpaidPostForBuyer(buyerId)
   } catch (error) {
     throw new Error(toErrorMessage(error))
   }
+  console.log(postSolds);
 
   const rows = Array.isArray(postSolds) ? postSolds : []
   const readSet = getReadSet(buyerId)
   const sortedRows = [...rows].sort((a, b) => {
-    const titleCompare = String(a?.title || '').localeCompare(String(b?.title || ''))
+    const titleCompare = String(a?.artworkPostTitle || '').localeCompare(String(b?.artworkPostTitle || ''))
     if (titleCompare !== 0) return titleCompare
     return Number(a?.finalPrice ?? 0) - Number(b?.finalPrice ?? 0)
   })
 
   return sortedRows
-    .filter((postSold) => postSold?.isPaid === false)
     .map((postSold, index) => {
       const id = buildPendingKey(buyerId, postSold, index)
       const amount = Number(postSold?.finalPrice ?? 0)
-      const title = postSold?.title || 'Artwork'
+      const title = postSold?.artworkPostTitle || 'Artwork'
+      const artworkPostId = getArtworkPostId(postSold)
 
       return {
         id,
@@ -74,10 +86,8 @@ export async function listNotifications(userId) {
         paymentStatus: 'pending',
         isRead: readSet.has(id),
         timestamp: null,
-        artworkPostId: postSold?.artworkPostId ?? postSold?.ArtworkPostId ?? null,
-        canPay: Number.isInteger(
-          Number(postSold?.artworkPostId ?? postSold?.ArtworkPostId),
-        ),
+        artworkPostId: Number.isInteger(artworkPostId) ? artworkPostId : null,
+        canPay: Number.isInteger(artworkPostId),
       }
     })
 }
@@ -109,7 +119,7 @@ export async function listPurchasedArtworks(userId) {
     return Number(a?.finalPrice ?? 0) - Number(b?.finalPrice ?? 0)
   })
 
-  const paidRows = sortedRows.filter((postSold) => postSold?.isPaid === true)
+  const paidRows = sortedRows.filter((postSold) => isPaidFlag(postSold) === true)
 
   return Promise.all(
     paidRows.map(async (postSold, index) => {
@@ -167,8 +177,8 @@ export async function completePayment({
 
   try {
     await postSoldApis.markAsPaid({
-      BuyerId: buyerId,
-      ArtworkPostId: artworkPostId,
+      buyerId,
+      artworkPostId,
     })
   } catch (error) {
     throw new Error(toErrorMessage(error))

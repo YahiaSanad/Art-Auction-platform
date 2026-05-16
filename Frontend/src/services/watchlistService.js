@@ -41,8 +41,8 @@ export async function addToWatchlist(userId, artworkId) {
   const buyerId = toInt(userId, 'buyer id')
   const artworkPostId = toInt(artworkId, 'artwork id')
   return watchListApis.createWatchList({
-    BuyerId: buyerId,
-    ArtworkPostId: artworkPostId,
+    buyerId,
+    artworkPostId,
   })
 }
 

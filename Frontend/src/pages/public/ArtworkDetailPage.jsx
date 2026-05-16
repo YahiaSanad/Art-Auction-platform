@@ -11,7 +11,6 @@ import { ROLES } from '../../constants/roles'
 import { DEFAULT_ARTWORK_IMAGE } from '../../constants/images'
 import { BidForm } from '../../components/bids/BidForm'
 import { listArtworkBids, placeBid } from '../../services/bidsService'
-import { useAuctionRealtime } from '../../hooks/useAuctionRealtime'
 import { listWatchlist, toggleWatchlist } from '../../services/watchlistService'
 import { getAuctionState } from '../../utils/time'
 
@@ -32,8 +31,6 @@ export function ArtworkDetailPage() {
     queryFn: () => listWatchlist(user.id),
     enabled: Boolean(user?.id && String(user?.role || '').toLowerCase() === ROLES.BUYER),
   })
-
-  useAuctionRealtime(artworkId)
 
   const bidMutation = useMutation({
     mutationFn: ({ amount }) => placeBid({ artworkId, bidder: user, amount }),
@@ -57,7 +54,7 @@ export function ArtworkDetailPage() {
     : 'upcoming'
   const canBid =
     String(user?.role || '').toLowerCase() === ROLES.BUYER &&
-    auctionStatus !== 'ended'
+      auctionStatus !== 'ended' && auctionStatus !== 'upcoming'
   const isSavedToWatchlist = watchlist.some((item) => String(item.id) === String(artworkId))
 
   const bidHint = useMemo(() => {
@@ -68,8 +65,12 @@ export function ArtworkDetailPage() {
   }, [user, auctionStatus])
 
   const currentBidAmount = useMemo(() => {
+    const basePrice = Number.isFinite(Number(artwork?.initialPrice))
+      ? Number(artwork.initialPrice)
+      : Number(artwork?.buyNowPrice ?? artwork?.buyNewPrice ?? 0)
+
     if (!Array.isArray(bids) || bids.length === 0) {
-      return Number(artwork?.initialPrice ?? artwork?.buyNewPrice ?? 0)
+      return basePrice
     }
 
     const highestBid = bids.reduce((maxValue, bid) => {
@@ -79,8 +80,8 @@ export function ArtworkDetailPage() {
 
     return highestBid > 0
       ? highestBid
-      : Number(artwork?.initialPrice ?? artwork?.buyNewPrice ?? 0)
-  }, [artwork?.buyNewPrice, artwork?.initialPrice, bids])
+      : basePrice
+  }, [artwork?.buyNowPrice, artwork?.buyNewPrice, artwork?.initialPrice, bids])
 
   if (isLoading) {
     return <p className="text-sm text-stone-600">Loading artwork...</p>

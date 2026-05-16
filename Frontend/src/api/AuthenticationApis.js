@@ -1,23 +1,49 @@
 // Imports
-import { json } from 'zod';
-import {apiClient} from './ApiClient';
+import { apiClient } from './ApiClient';
 import Cookies from 'js-cookie';
+
+const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:'
+const baseCookieOptions = {
+    sameSite: 'lax',
+    secure: isHttps,
+}
+
+function extractErrorMessage(error, fallbackMessage) {
+    const responseData = error?.response?.data
+    if (typeof responseData === 'string' && responseData.trim().length > 0) return responseData
+    if (responseData?.message) return responseData.message
+    if (typeof error?.message === 'string' && error.message.trim().length > 0) return error.message
+    return fallbackMessage
+}
 
 // Save data in cookie
 const processAuthDto = (data) => {
-    // Store tokens in cookies
-    // Note: If your backend sets 'Set-Cookie' headers, you don't even need this JS logic!
-    // But if you're doing it manually in the frontend:
-    Cookies.set('jwt_token', data.token, { expires: new Date(data.expiresOn), secure: true, sameSite: 'strict' });
-    Cookies.set('refresh_token', data.refreshToken, { expires: 7, secure: true, sameSite: 'strict' });
+    if (data?.token) {
+        const jwtCookieOptions = { ...baseCookieOptions }
+        const expiresOn = data?.expiresOn ? new Date(data.expiresOn) : null
+        if (expiresOn instanceof Date && !Number.isNaN(expiresOn.getTime())) {
+            jwtCookieOptions.expires = expiresOn
+        }
+        Cookies.set('jwt_token', data.token, jwtCookieOptions)
+    }
+
+    if (data?.refreshToken) {
+        Cookies.set('refresh_token', data.refreshToken, {
+            ...baseCookieOptions,
+            expires: 30, // days
+        })
+    }
 
     // Return the user data to be stored in your Zustand/Redux store
     return {
-        id: data.id,
-        name: data.fullName,
-        email: data.email,
-        role: data.role,
-        adminId: data.adminId
+        id: data?.id ?? data?.Id ?? null,
+        name: data?.name ?? data?.fullName ?? '',
+        email: data?.email ?? '',
+        role: data?.role ?? '',
+        adminId: data?.adminId ?? null,
+        token: data?.token ?? '',
+        refreshToken: data?.refreshToken ?? '',
+        expiresOn: data?.expiresOn ?? null,
     };
 };
 
@@ -27,7 +53,7 @@ export const registerBuyer = async (buyerData) => {
         const response = await apiClient.post('/Authentication/BuyerRegistration', buyerData);
         return processAuthDto(response.data); 
     } catch (error) {
-        throw error.response?.data || "Registration failed";
+        throw new Error(extractErrorMessage(error, 'Registration failed'));
     }
 };
 
@@ -37,7 +63,7 @@ export const registerArtist = async (artistData) => {
         const response = await apiClient.post('/Authentication/ArtistRegistration', artistData);
         return processAuthDto(response.data);
     } catch (error) {
-        throw error.response?.data || "Registration failed";
+        throw new Error(extractErrorMessage(error, 'Registration failed'));
     }
 };
 
@@ -47,7 +73,7 @@ export const login = async (loginData) => {
         const response = await apiClient.post('/Authentication/Login', loginData);
         return processAuthDto(response.data);
     } catch (error) {
-        throw error.response?.data || "Login failed";
+        throw new Error(extractErrorMessage(error, 'Login failed'));
     }
 };
 
@@ -55,13 +81,13 @@ export const login = async (loginData) => {
 export const refreshToken = async () => {
     try {
         const currentRefreshToken = Cookies.get('refresh_token');
-        if (!currentRefreshToken) throw new Error("No refresh token found");
+        if (!currentRefreshToken) throw new Error('No refresh token found');
 
         // Sending raw string as JSON body for your C# [FromBody] string
         const response = await apiClient.post('/Authentication/RefreshToken', JSON.stringify(currentRefreshToken));
         return processAuthDto(response.data);
     } catch (error) {
-        throw error.response?.data || "Session expired";
+        throw new Error(extractErrorMessage(error, 'Session expired'));
     }
 };
 
@@ -69,14 +95,12 @@ export const refreshToken = async () => {
 // Logout 
 export const logout = async () => {
     const currentRefreshToken = Cookies.get('refresh_token');
-    if (!currentRefreshToken) throw new Error("No refresh token found");
-    console.log({refreshToken : currentRefreshToken});
-
-    // Calling logout API missing
-    const response = await apiClient.post("/Authentication/Logout", {refreshToken : currentRefreshToken});
-
-    // Remove cookie data
-    if (response.message !== null)
+    try {
+        if (currentRefreshToken) {
+            await apiClient.post('/Authentication/Logout', { refreshToken: currentRefreshToken });
+        }
+    } finally {
         Cookies.remove('jwt_token');
         Cookies.remove('refresh_token');
+    }
 };

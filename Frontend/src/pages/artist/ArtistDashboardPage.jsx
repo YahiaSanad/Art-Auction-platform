@@ -11,7 +11,6 @@ export function ArtistDashboardPage() {
     enabled: Boolean(user?.id),
   })
 
-  console.log(artworks);
   const pendingCount = artworks.filter((artwork) => artwork.adminId === 0).length
 
   return (

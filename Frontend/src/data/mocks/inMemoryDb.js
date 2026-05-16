@@ -1,5 +1,4 @@
 import { ARTWORK_IMAGE_LIBRARY } from '../../constants/images'
-import { auctionHubService } from '../../realtime/auctionHub'
 
 const now = Date.now()
 const hour = 60 * 60 * 1000
@@ -275,10 +274,6 @@ function exposeDbForDebugging() {
   }
 }
 
-function emitWinnerNotificationRealtime(notificationPayload) {
-  auctionHubService.emitLocal('WinnerNotified', notificationPayload)
-}
-
 exposeDbForDebugging()
 
 export function nextId(prefix) {
@@ -321,7 +316,6 @@ function processEndedAuctions() {
       }
 
       db.notifications.push(winnerNotification)
-      emitWinnerNotificationRealtime(winnerNotification)
     }
 
     settledAuctionIds.add(artwork.id)

@@ -1,38 +1,34 @@
-﻿# Art Auction Platform (.NET Version)
+﻿# Art Auction Platform (Spring Boot Version)
 
-This branch (`main`) contains the .NET-based version of the Art Auction platform.
+This branch (`spring-boot`) contains the Spring Boot microservices version of the Art Auction platform.
 
 ## Branches
-- `main`: .NET version (this branch)
-- `spring-boot`: Spring Boot microservices version
+- `main`: .NET version
+- `spring-boot`: Spring Boot version (this branch)
 
-## Project Structure
-- `Project/Backend/src/ArtAuction.API`: ASP.NET Core API
-- `Project/Backend/src/ArtAuction.Application`: Application layer
-- `Project/Backend/src/ArtAuction.Infrastructure`: Infrastructure and persistence
-- `Project/Backend/tests/ArtAuction.Tests`: Test project
-- `Frontend`: React + Vite frontend
+## Services
+- `ConfigServer`
+- `DiscoveryServer`
+- `ApiGateway`
+- `AuthenticationServices`
+- `ArtistServices`
+- `ArtworkPostServices`
+- `AuctionServices`
+- `NotificationServices`
+- `Frontend` (React + Vite)
 
 ## Prerequisites
-- .NET SDK 10.0 (preview)
-- SQL Server
+- Java 17
+- Maven 3.9+
+- Docker and Docker Compose
 - Node.js 20+
 - pnpm
 
-## Run Backend
+## Run With Docker Compose
 ```bash
-cd Project/Backend/src/ArtAuction.API
-dotnet restore
-dotnet run
-```
-
-## Run Frontend
-```bash
-cd Frontend
-pnpm install
-pnpm dev
+docker compose up --build
 ```
 
 ## Notes
-- Keep secrets and credentials out of source code before deployment.
+- Set sensitive values (for example `CONFIG_REPO_GIT_PASSWORD`, `SMTP_USERNAME`, `SMTP_APP_PASSWORD`) in your environment before running.
 - `node_modules` and build output are ignored by git.

@@ -1,5 +1,4 @@
 import * as postBidApis from '../api/PostBidApis'
-import { auctionHubService } from '../realtime/auctionHub'
 
 export async function placeBid({ artworkId, bidder, amount }) {
   if (!bidder || String(bidder.role || '').toLowerCase() !== 'buyer') {
@@ -16,23 +15,13 @@ export async function placeBid({ artworkId, bidder, amount }) {
 
   try {
     await postBidApis.createPostBid({
-      BuyerId: buyerId,
-      ArtworkPostId: artworkPostId,
-      BuyerPrice: buyerPrice,
+      buyerId,
+      artworkPostId,
+      buyerPrice,
     })
   } catch (error) {
     throw new Error(toErrorMessage(error))
   }
-
-  const bidPayload = {
-    artworkId: String(artworkPostId),
-    bidderId: buyerId,
-    bidderName: bidder.name || 'You',
-    buyerPrice,
-    timestamp: new Date().toISOString(),
-  }
-
-  auctionHubService.emitLocal('BidPlaced', bidPayload)
 
   return {
     artworkId: artworkPostId,
@@ -54,7 +43,7 @@ export async function listBuyerBids(buyerId) {
     artworkId: Number(bid.artworkPostId),
     artworkTitle: bid.title || `Artwork #${bid.artworkPostId}`,
     price: Number(bid.buyerPrice ?? bid.BuyerPrice ?? 0),
-    timestamp: bid.timestamp ?? bid.createdAt ?? null,
+    bidTime: bid.bidTime ?? bid.createdAt ?? null,
   }))
 }
 
@@ -68,6 +57,7 @@ export async function listArtworkBids(artworkId) {
     id: `${artworkPostId}-${index}`,
     buyerName: bid.buyerName || bid.BuyerName || 'Unknown Buyer',
     buyerPrice: Number(bid.buyerPrice ?? bid.BuyerPrice ?? 0),
+    bidTime: bid.bidTime ?? null,
   }))
 }
 

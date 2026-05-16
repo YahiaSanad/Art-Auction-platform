@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import {data, Link} from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../../store/authStore'
 import {
@@ -8,6 +8,7 @@ import {
 import { APP_ROUTES } from '../../constants/routes'
 import { formatCurrency } from '../../utils/currency'
 import { formatDateTime } from '../../utils/time'
+import {da} from "zod/locales";
 
 export function NotificationsPage() {
   const user = useAuthStore((state) => state.user)
@@ -20,6 +21,7 @@ export function NotificationsPage() {
     refetchInterval: 5000,
     refetchIntervalInBackground: true,
   })
+  console.log(notifications);
 
   const markReadMutation = useMutation({
     mutationFn: (notificationId) => markNotificationAsRead(notificationId, user.id),
@@ -56,9 +58,6 @@ export function NotificationsPage() {
                       Amount due: {formatCurrency(note.amount)}
                     </p>
                   ) : null}
-                  <p className="mt-1 text-xs text-stone-500">
-                    {note.timestamp ? formatDateTime(note.timestamp) : '-'}
-                  </p>
                 </div>
                 {note.type === 'payment_required' && note.paymentStatus !== 'paid' && note.canPay ? (
                   <Link

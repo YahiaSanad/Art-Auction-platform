@@ -1,0 +1,19 @@
+<project>
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.artauction</groupId>
+    <artifactId>art-auction-system</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>DiscoveryServer</module>
+        <module>ApiGateway</module>
+        <module>ConfigServer</module>
+        <module>AuthenticationServices</module>
+        <module>AuctionServices</module>
+        <module>ArtistServices</module>
+        <module>ArtworkPostServices</module>
+        <module>NotificationServices</module>
+    </modules>
+</project>

@@ -67,7 +67,7 @@ export function HomePage() {
                   </Link>
                   <p className="text-sm text-stone-600">by {artwork.artistName}</p>
                   <p className="mt-1 text-sm text-stone-700">
-                    Current bid: <span className="font-extrabold">{formatCurrency(artwork.buyNewPrice)}</span>
+                    Current bid: <span className="font-extrabold">{formatCurrency(Number(artwork.buyNowPrice ?? artwork.buyNewPrice ?? artwork.initialPrice ?? 0))}</span>
                   </p>
                   <AuctionTimer
                     startTime={artwork.startDate}

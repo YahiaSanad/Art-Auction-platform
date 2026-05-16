@@ -11,7 +11,9 @@ const convertToFormData = (data) => {
         title: 'Title',
         description: 'Description',
         initialPrice: 'InitialPrice',
-        buyNewPrice: 'BuyNewPrice',
+        buyNowPrice: 'BuyNowPrice',
+        // Legacy key kept for compatibility with older frontend payloads.
+        buyNewPrice: 'BuyNowPrice',
         startDate: 'StartDate',
         endDate: 'EndDate',
         image: 'Image',

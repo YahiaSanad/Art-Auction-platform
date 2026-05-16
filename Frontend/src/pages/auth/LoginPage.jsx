@@ -19,7 +19,7 @@ export function LoginPage() {
   const setSession = useAuthStore((state) => state.setSession)
   const navigate = useNavigate()
 
-  const [values, setValues] = useState({ email: 'admin@art.com', password: 'P@ssword123' })
+  const [values, setValues] = useState({ email: 'david.emad.eid@example.com', password: 'Password@123' })
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 

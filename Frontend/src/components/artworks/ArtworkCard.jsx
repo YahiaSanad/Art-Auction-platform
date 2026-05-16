@@ -49,7 +49,7 @@ export function ArtworkCard({
 
         <div className="space-y-1">
           <p className="text-sm text-stone-600">
-            Current bid: <span className="font-extrabold text-stone-900">{formatCurrency(artwork.buyNewPrice)}</span>
+            Current bid: <span className="font-extrabold text-stone-900">{formatCurrency(Number(artwork.buyNowPrice ?? artwork.buyNewPrice ?? artwork.initialPrice ?? 0))}</span>
           </p>
           <AuctionTimer
             startTime={artwork.startDate}
